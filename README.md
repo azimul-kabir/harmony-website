@@ -4,6 +4,8 @@ The landing page for [Harmony](https://github.com/azimul-kabir/harmony), publish
 
 It's a single static page: `index.html`, `styles.css`, a small `main.js` (screenshot tabs and copy buttons), and optimized images in `assets/`. There is no build step, and nothing is fetched from GitHub at runtime.
 
+The page follows the system light/dark setting (`prefers-color-scheme`). Colors are tokens on `:root` in `styles.css`, with light overrides in the media query right below it. In light mode, the tour uses the light-theme screenshots where one exists.
+
 ## Preview locally
 
 ```bash
