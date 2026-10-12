@@ -1,8 +1,14 @@
 const REPOSITORY = 'azimul-kabir/harmony';
 const API_ROOT = `https://api.github.com/repos/${REPOSITORY}`;
+const API_CACHE_TTL = 10 * 60 * 1000;
+const TEXT_CACHE_TTL = 5 * 60 * 1000;
 const pageStatus = document.querySelector('#source-status, [data-source-status]');
 const sourceUrl = (path, branch) =>
   `https://github.com/${REPOSITORY}/blob/${encodeURIComponent(branch)}/${path}`;
+let usedFreshApiCache = false;
+let usedStaleApiCache = false;
+let usedFreshTextCache = false;
+let usedStaleTextCache = false;
 
 function escapeHTML(value) {
   return value.replace(/[&<>"']/g, (character) => ({
@@ -166,33 +172,6 @@ function plainText(markdown, documentUrl, limit = 480) {
   return holder.textContent.replace(/\s+/g, ' ').trim().slice(0, limit);
 }
 
-function summarizeMarkdown(markdown, maxChars = 185) {
-  const blocks = markdown
-    .replace(/```[\s\S]*?```/g, '')
-    .split(/\n\s*\n/)
-    .map((block) => {
-      const lines = block.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-      if (!lines.length || lines.every((line) =>
-        /^(?:#{1,6}\s|---+$|<[^>]+>|!\[)/.test(line))) return '';
-      const bullets = lines.filter((line) => /^(?:[-*+]|\d+\.)\s+/.test(line));
-      const content = (bullets.length ? bullets.slice(0, 2).map((line) => line.replace(/^(?:[-*+]|\d+\.)\s+/, '')).join('; ') : lines.join(' '))
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-        .replace(/\[([^\]]+)\]\[[^\]]*\]/g, '$1')
-        .replace(/[*`_~]/g, '')
-        .replace(/!\[[^\]]*\]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      return /^(?:features include|search instantly across|sort your library by)\s*:?\s*$/i.test(content) ? '' : content;
-    })
-    .filter(Boolean);
-
-  const summary = blocks.find((block) => block.length > 38) || blocks[0] || '';
-  const firstSentence = summary.match(/^.{32,}?[.!?](?:\s|$)/)?.[0].trim() || summary;
-  if (firstSentence.length <= maxChars) return firstSentence;
-  const truncated = firstSentence.slice(0, maxChars).replace(/\s+\S*$/, '').trimEnd();
-  return truncated ? `${truncated}…` : '';
-}
-
 function findSection(markdown, headingPattern, maxLevel = 1) {
   const lines = markdown.split(/\r?\n/);
   const start = lines.findIndex((line) => {
@@ -251,7 +230,7 @@ function addSourceError(target, label, error, url) {
   target.append(card);
 }
 
-function renderLiveFeatures(readme, readmeUrl, targetSelector = '#live-features', limit = Infinity) {
+function renderFeatureTopics(readme, readmeUrl, targetSelector = '#live-features', limit = Infinity) {
   const featureSection = findSection(readme, /^features$/i);
   if (!featureSection) throw new Error('The current project README has no Features section.');
   const items = findSubsections(featureSection.markdown, 2);
@@ -259,24 +238,13 @@ function renderLiveFeatures(readme, readmeUrl, targetSelector = '#live-features'
 
   const fragment = document.createDocumentFragment();
   for (const item of items.slice(0, limit)) {
-    const card = document.createElement('article');
-    card.className = 'feature-card';
-    const copy = document.createElement('div');
-    copy.className = 'feature-copy markdown-content';
-    const number = document.createElement('span');
-    number.className = 'feature-number';
-    number.textContent = item.heading;
-    const description = document.createElement('p');
-    description.textContent = summarizeMarkdown(item.markdown);
-    const link = document.createElement('a');
-    link.className = 'source-project-link';
-    link.href = readmeUrl;
-    link.target = '_blank';
-    link.rel = 'noreferrer';
-    link.textContent = 'Read the project README ↗';
-    copy.append(number, description, link);
-    card.append(copy);
-    fragment.append(card);
+    const topic = document.createElement('a');
+    topic.className = 'feature-topic';
+    topic.href = readmeUrl;
+    topic.target = '_blank';
+    topic.rel = 'noreferrer';
+    topic.textContent = item.heading;
+    fragment.append(topic);
   }
   document.querySelector(targetSelector).replaceChildren(fragment);
 }
@@ -304,15 +272,39 @@ function renderInstallationNotes(readme, readmeUrl) {
   target.replaceChildren(details);
 }
 
-function renderGallery(files, limit = Infinity) {
+function selectScreenshotImages(files, limit) {
   const images = files
     .filter((file) => file.type === 'file' && /\.(?:jpe?g|png|webp|gif)$/i.test(file.name))
     .sort((first, second) => first.name.localeCompare(second.name));
   if (!images.length) throw new Error('The project screenshot directory contains no images.');
 
-  const gallery = document.querySelector('#live-gallery');
+  const groups = {
+    desktop: images.filter((image) => !/mobile|light/i.test(image.name)),
+    mobile: images.filter((image) => /mobile/i.test(image.name)),
+    light: images.filter((image) => /light/i.test(image.name)),
+  };
+  const selected = [];
+  const cursors = { desktop: 0, mobile: 0, light: 0 };
+  while (selected.length < Math.min(limit, images.length)) {
+    let added = false;
+    for (const category of ['desktop', 'mobile', 'light']) {
+      const candidate = groups[category][cursors[category]];
+      if (!candidate || selected.length >= limit) continue;
+      cursors[category] += 1;
+      selected.push(candidate);
+      added = true;
+    }
+    if (!added) break;
+  }
+  return selected;
+}
+
+function renderGallery(files, limit = Infinity, targetSelector = '#live-gallery') {
+  const images = selectScreenshotImages(files, limit);
+  const gallery = document.querySelector(targetSelector);
+  if (!gallery) return;
   const fragment = document.createDocumentFragment();
-  for (const image of images.slice(0, limit)) {
+  for (const image of images) {
     const imageUrl = safeRawGitHubUrl(image.download_url);
     const imagePage = safeGitHubUrl(image.html_url);
     if (!imageUrl || !imagePage) continue;
@@ -326,6 +318,8 @@ function renderGallery(files, limit = Infinity) {
     preview.src = imageUrl;
     preview.alt = `Harmony project screenshot: ${image.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')}`;
     preview.loading = 'lazy';
+    figure.classList.toggle('screenshot-card-mobile', /mobile/i.test(image.name));
+    figure.classList.toggle('screenshot-card-light', /light/i.test(image.name));
     preview.addEventListener('error', () => {
       console.error(`The Harmony screenshot ${image.name} could not be loaded.`, imageUrl);
       const unavailable = document.createElement('span');
@@ -347,6 +341,29 @@ function renderGallery(files, limit = Infinity) {
   }
   if (!fragment.childElementCount) throw new Error('The project screenshots do not have downloadable images.');
   gallery.replaceChildren(fragment);
+}
+
+function findScreenshotFiles(readme, branch) {
+  const section = findSection(readme, /^screenshots$/i);
+  if (!section) throw new Error('The current README has no Screenshots section.');
+  const htmlImages = [...section.markdown.matchAll(/<img\b[^>]*?\bsrc=["']([^"']+)["']/gi)]
+    .map((match) => match[1].trim());
+  const markdownImages = [...section.markdown.matchAll(/!\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)]
+    .map((match) => match[1].trim());
+  const paths = [...htmlImages, ...markdownImages]
+    .filter((path) => path.startsWith('docs/images/screenshots/') && !path.includes('..'));
+  const uniquePaths = [...new Set(paths)];
+  if (!uniquePaths.length) throw new Error('The README Screenshots section contains no repository images.');
+  return uniquePaths.map((path) => {
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    return {
+      type: 'file',
+      name: path.split('/').pop(),
+      path,
+      download_url: `https://raw.githubusercontent.com/${REPOSITORY}/${encodeURIComponent(branch)}/${encodedPath}`,
+      html_url: `https://github.com/${REPOSITORY}/blob/${encodeURIComponent(branch)}/${encodedPath}`,
+    };
+  });
 }
 
 function findGuideSection(guide, headingPattern) {
@@ -449,8 +466,15 @@ function safeGitHubUrl(value) {
 }
 
 function renderRepositoryDocs(root, docs, branch) {
+  const markdownDocs = docs.tree
+    .filter((entry) => entry.type === 'blob' && entry.path.startsWith('docs/') && /\.md$/i.test(entry.path))
+    .map((entry) => ({
+      type: 'file',
+      name: entry.path.split('/').pop(),
+      path: entry.path,
+    }));
   const entries = [
-    ...docs.filter((entry) => entry.type === 'file' && /\.md$/i.test(entry.name)),
+    ...markdownDocs,
     ...root.filter((entry) => entry.type === 'file' && /\.(?:md|toml|yml|yaml)$/i.test(entry.name)),
   ];
   const byPath = new Map(entries.map((entry) => [entry.path, entry]));
@@ -516,18 +540,82 @@ function updateRelease(release, readme) {
 
 async function fetchText(path, branch) {
   const url = `https://raw.githubusercontent.com/${REPOSITORY}/${encodeURIComponent(branch)}/${path}`;
-  const response = await fetchWithTimeout(`${url}?_=${Date.now()}`, { cache: 'no-store' });
-  if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
-  return { text: await response.text(), url };
+  const cacheKey = `harmony-text-cache:${url}`;
+  let cached = null;
+  try {
+    const saved = localStorage.getItem(cacheKey);
+    if (saved) cached = JSON.parse(saved);
+  } catch (error) {
+    console.warn('Unable to read the local Harmony documentation cache:', error);
+  }
+  if (!cached || typeof cached.savedAt !== 'number' || typeof cached.text !== 'string') {
+    cached = null;
+  }
+  if (cached && Date.now() - cached.savedAt < TEXT_CACHE_TTL) {
+    usedFreshTextCache = true;
+    return { text: cached.text, url };
+  }
+
+  try {
+    const response = await fetchWithTimeout(`${url}?_=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
+    const text = await response.text();
+    const serialized = JSON.stringify({ savedAt: Date.now(), text });
+    if (serialized.length < 500000) {
+      try {
+        localStorage.setItem(cacheKey, serialized);
+      } catch (error) {
+        console.warn('Unable to save the local Harmony documentation cache:', error);
+      }
+    }
+    return { text, url };
+  } catch (error) {
+    if (!cached) throw error;
+    usedStaleTextCache = true;
+    console.warn(`Using the last cached Harmony document from ${url}:`, error);
+    return { text: cached.text, url };
+  }
 }
 
 async function fetchJson(url) {
-  const response = await fetchWithTimeout(url, {
-    cache: 'no-store',
-    headers: { Accept: 'application/vnd.github+json' },
-  });
-  if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
-  return response.json();
+  const cacheKey = `harmony-api-cache:${url}`;
+  let cached = null;
+  try {
+    const saved = localStorage.getItem(cacheKey);
+    if (saved) cached = JSON.parse(saved);
+  } catch (error) {
+    console.warn('Unable to read the local Harmony API cache:', error);
+  }
+  if (!cached || typeof cached.savedAt !== 'number' || !Object.hasOwn(cached, 'value')) {
+    cached = null;
+  }
+  if (cached && Date.now() - cached.savedAt < API_CACHE_TTL) {
+    usedFreshApiCache = true;
+    return cached.value;
+  }
+
+  try {
+    const response = await fetchWithTimeout(url, {
+      cache: 'no-store',
+      headers: { Accept: 'application/vnd.github+json' },
+    });
+    if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
+    const value = await response.json();
+    const serialized = JSON.stringify({ savedAt: Date.now(), value });
+    if (serialized.length < 500000) {
+      try {
+        localStorage.setItem(cacheKey, serialized);
+      } catch (error) {
+        console.warn('Unable to save the local Harmony API cache:', error);
+      }
+    }
+    return value;
+  } catch (error) {
+    if (!cached) throw error;
+    usedStaleApiCache = true;
+    console.warn(`Using the last cached GitHub API response for ${url}:`, error);
+    return cached.value;
+  }
 }
 
 async function fetchWithTimeout(url, options) {
@@ -574,6 +662,10 @@ document.addEventListener('click', (event) => {
 async function syncProject() {
   const page = document.body.dataset.page;
   const failures = [];
+  usedFreshApiCache = false;
+  usedStaleApiCache = false;
+  usedFreshTextCache = false;
+  usedStaleTextCache = false;
   pageStatus.textContent = `Fetching live documentation from ${REPOSITORY}…`;
   try {
     const repository = await fetchJson(API_ROOT);
@@ -592,8 +684,7 @@ async function syncProject() {
     };
     if (page === 'setup' || page === 'faq') requests.guide = fetchText('GUIDE.md', branch);
     if (page === 'home' || page === 'faq') requests.release = fetchJson(`${API_ROOT}/releases/latest`);
-    if (page === 'home') requests.screenshots = fetchJson(`${API_ROOT}/contents/docs/images/screenshots?ref=${apiRef}`);
-    if (page === 'developers') requests.docs = fetchJson(`${API_ROOT}/contents/docs?ref=${apiRef}`);
+    if (page === 'developers') requests.docs = fetchJson(`${API_ROOT}/git/trees/${apiRef}?recursive=1`);
 
     const names = Object.keys(requests);
     const results = await Promise.allSettled(Object.values(requests));
@@ -628,11 +719,8 @@ async function syncProject() {
       console.error('Harmony repository sync failed for latest release:', loaded.release.reason);
       failures.push('latest release');
     }
-    const screenshots = loaded.screenshots
-      ? resultValue(loaded.screenshots, 'Project screenshot listing', document.querySelector('#live-gallery'), `${filesUrl}/docs/images/screenshots`, failures)
-      : null;
     const docs = loaded.docs
-      ? resultValue(loaded.docs, 'Project documentation listing', document.querySelector('#live-developer-docs'), `${filesUrl}/docs`, failures)
+      ? resultValue(loaded.docs, 'Project documentation listing', document.querySelector('#live-developer-docs'), filesUrl, failures)
       : null;
 
     const licenseFile = root?.find((entry) =>
@@ -681,6 +769,26 @@ async function syncProject() {
       showHeroUnavailable('Project artwork is unavailable. Open the artwork directory on GitHub.');
     }
 
+    let screenshots = null;
+    if (readmeSource && (page === 'home' || page === 'features')) {
+      try {
+        screenshots = findScreenshotFiles(readmeSource.text, branch);
+      } catch (error) {
+        console.error('Unable to discover the current Harmony screenshots:', error);
+        failures.push('README screenshots');
+        addSourceError(
+          document.querySelector(page === 'home' ? '#live-gallery' : '#features-gallery'),
+          'Project screenshots', error, `${filesUrl}/docs/images/screenshots`,
+        );
+      }
+    } else if (!readmeSource && (page === 'home' || page === 'features')) {
+      addSourceError(
+        document.querySelector(page === 'home' ? '#live-gallery' : '#features-gallery'),
+        'Project screenshots', new Error('The current README is needed to discover project images.'),
+        `${filesUrl}/README.md`,
+      );
+    }
+
     if (readmeSource) {
       const overview = findSection(readmeSource.text, /^overview$/i, 2);
       const overviewParagraph = overview?.markdown.split(/\n\s*\n/)
@@ -696,7 +804,7 @@ async function syncProject() {
       const featureTarget = page === 'home' ? '#home-highlights' : '#live-features';
       if (page === 'home' || page === 'features') {
         try {
-          renderLiveFeatures(readmeSource.text, readmeSource.url, featureTarget, page === 'home' ? 3 : Infinity);
+          renderFeatureTopics(readmeSource.text, readmeSource.url, featureTarget, page === 'home' ? 8 : Infinity);
         } catch (error) {
           console.error('Unable to render Harmony README features:', error);
           failures.push('README features');
@@ -775,20 +883,26 @@ async function syncProject() {
       }
     }
 
-    if (screenshots) {
+    if (screenshots && (page === 'home' || page === 'features')) {
       try {
-        renderGallery(screenshots, 3);
+        renderGallery(screenshots, page === 'home' ? 8 : Infinity, page === 'home' ? '#live-gallery' : '#features-gallery');
       } catch (error) {
         console.error('Unable to render Harmony screenshots:', error);
         failures.push('screenshot gallery');
-        addSourceError(document.querySelector('#live-gallery'), 'Project screenshots', error, `https://github.com/${REPOSITORY}/tree/${encodeURIComponent(branch)}/docs/images/screenshots`);
+        addSourceError(document.querySelector(page === 'home' ? '#live-gallery' : '#features-gallery'), 'Project screenshots', error, `${filesUrl}/docs/images/screenshots`);
       }
     }
 
     const synchronizedAt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date());
+    const cacheNotices = [];
+    if (usedStaleApiCache) cacheNotices.push('GitHub API unavailable; using the last cached repository index');
+    else if (usedFreshApiCache) cacheNotices.push('using a recent cached repository index');
+    if (usedStaleTextCache) cacheNotices.push('GitHub raw content unavailable; using recently cached documentation');
+    else if (usedFreshTextCache) cacheNotices.push('using recently cached documentation');
+    const cacheNotice = cacheNotices.length ? ` ${cacheNotices.join('; ')}.` : '';
     pageStatus.textContent = failures.length
-      ? `Some live project information could not be loaded (${[...new Set(failures)].join(', ')}). Source links remain available. Last checked ${synchronizedAt}.`
-      : `Live from ${REPOSITORY} · ${branch} · Checked ${synchronizedAt}.`;
+      ? `Some live project information could not be loaded (${[...new Set(failures)].join(', ')}). Source links remain available. Last checked ${synchronizedAt}.${cacheNotice}`
+      : `Live from ${REPOSITORY} · ${branch} · Checked ${synchronizedAt}.${cacheNotice}`;
   } catch (error) {
     console.error('Unable to synchronize Harmony repository content:', error);
     const targetSelector = {
