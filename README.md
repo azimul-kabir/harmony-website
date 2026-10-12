@@ -1,13 +1,19 @@
-# Harmony website
+# Harmony developer website
 
-A responsive, static landing page for [Harmony](https://github.com/azimul-kabir/harmony), a self-hosted music management platform.
+The responsive developer and getting-started website for [Harmony](https://github.com/azimul-kabir/harmony), published at `https://harmony.azimulkabir.com/`.
 
 ## Preview locally
 
-Open `index.html` in a browser, or serve this directory with any static file server. The site uses plain HTML, CSS, and JavaScript and requires no build step.
+Serve this directory with a static file server, then open the served address in a browser. For example:
 
-Project details and installation instructions on the site link to the [Harmony repository](https://github.com/azimul-kabir/harmony).
+```bash
+python -m http.server 8080
+```
 
-The local artwork in `assets/` and `assets/screenshots/` is sourced from the Harmony repository's `docs/images/` and `docs/images/screenshots/`. Keep these original project images in place when deploying the site.
+The site is plain HTML, CSS, and JavaScript with no build step or server-side secrets. Its concise homepage links to separate Features, Get started, FAQ, and Developers pages. Those pages fetch Harmony's default branch and readme, user guide, release notes, developer docs, logo, hero artwork, and screenshots from GitHub when opened. Project facts and imagery are not duplicated here, so updates to Harmony's default branch appear automatically. If a live source cannot be reached, the affected section reports the problem and links to the upstream documentation.
 
-The feature descriptions reflect the Harmony v3.1.0 documentation: scheduled Spotify and YouTube Music Source synchronization, explicit music and metadata imports, MusicBrainz-assisted metadata editing, duplicate review, bulk library management, and available database-and-artwork backup and restore under Settings → Operations. Backups do not include environment secrets or paths.
+The FAQ is assembled from current guide and release-note sections. The installation walkthrough, feature summaries, technology stack, and developer-resource links likewise render current material from the source repository.
+
+## Custom domain and deployment
+
+`CNAME` and the GitHub Pages Actions workflow publish the static website at `harmony.azimulkabir.com` after changes reach this repository's `main` branch. Point the subdomain's DNS CNAME at the GitHub Pages hostname for this repository (`azimul-kabir.github.io`) and enable GitHub Pages with **GitHub Actions** as its build and deployment source. GitHub Pages provisions HTTPS after DNS has propagated.
