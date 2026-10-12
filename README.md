@@ -14,6 +14,13 @@ The site is plain HTML, CSS, and JavaScript with no build step or server-side se
 
 The FAQ is assembled from current guide and release-note sections. The installation walkthrough, feature summaries, technology stack, and developer-resource links likewise render current material from the source repository.
 
-## Custom domain and deployment
+## Deploy with Cloudflare Pages
 
-`CNAME` and the GitHub Pages Actions workflow publish the static website at `harmony.azimulkabir.com` after changes reach this repository's `main` branch. Point the subdomain's DNS CNAME at the GitHub Pages hostname for this repository (`azimul-kabir.github.io`) and enable GitHub Pages with **GitHub Actions** as its build and deployment source. GitHub Pages provisions HTTPS after DNS has propagated.
+GitHub remains the source of truth; Cloudflare Pages builds and hosts this private repository. No GitHub Pages workflow, package install, API token, or repository secret is needed. The site is plain static files and has no compilation step.
+
+1. In Cloudflare, open **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
+2. Authorize GitHub if prompted and select `azimul-kabir/harmony-website`.
+3. Set the production branch to `main`, framework preset to **None**, the build command to `exit 0`, and the build output directory to `.`. `exit 0` is a successful no-op; Cloudflare serves the existing `index.html` and other static files directly.
+4. After the first successful deployment, open the Pages project **Custom domains** settings and add `harmony.azimulkabir.com`. Cloudflare will guide you through the DNS record and certificate setup.
+
+Cloudflare Pages supports private GitHub repositories and automatically deploys new commits to `main`; other branches can be used as previews. The site is static HTML, CSS, and JavaScript, so there is no separate build step. Do not point the hostname at `azimul-kabir.github.io`: this repository is private and the account plan does not include GitHub Pages hosting.
