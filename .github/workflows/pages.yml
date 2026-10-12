@@ -24,10 +24,6 @@ jobs:
     steps:
       - name: Check out website
         uses: actions/checkout@v4
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Upload static website
         uses: actions/upload-pages-artifact@v3
         with:
