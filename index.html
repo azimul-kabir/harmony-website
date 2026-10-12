@@ -3,79 +3,296 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f7f8f7">
-    <meta name="description" content="Explore Harmony, a self-hosted music library. Read the live user guide, features, frequently asked questions, and developer docs from its source repository.">
+    <title>Harmony — Self-hosted music library for Navidrome</title>
+    <meta name="description" content="Harmony is a free, open-source, self-hosted music manager. Sync Spotify and YouTube Music playlists, download only what's missing, and keep a clean, tagged library for Navidrome. Runs in Docker.">
+    <meta name="theme-color" content="#08111f">
     <link rel="canonical" href="https://harmony.azimulkabir.com/">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Harmony — Your music. Your way.">
-    <meta property="og:description" content="Explore Harmony's live project documentation, setup guide, and developer resources.">
+    <meta property="og:description" content="Self-hosted music acquisition, playlist sync, and library management for Navidrome.">
     <meta property="og:url" content="https://harmony.azimulkabir.com/">
-    <title>Harmony — Your music. Your way.</title>
-    <link id="site-icon" rel="icon" type="image/png">
+    <meta property="og:image" content="https://harmony.azimulkabir.com/assets/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="styles.css">
-    <script src="site-shell.js" defer></script>
-    <script src="script.js" defer></script>
+    <script src="main.js" defer></script>
   </head>
-  <body data-page="home">
-    <div data-site-header></div>
-    <main>
-      <section class="hero home-hero">
-        <div class="container">
-          <div class="hero-heading">
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top" aria-label="Harmony home">
+          <img src="assets/icon.svg" alt="" width="30" height="30"> Harmony
+        </a>
+        <nav aria-label="Primary">
+          <a href="#features">Features</a>
+          <a href="#tour">Tour</a>
+          <a href="#install">Install</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <a class="btn btn-ghost btn-sm" href="https://github.com/azimul-kabir/harmony">
+          <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="hero" id="top">
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <a class="pill" href="https://github.com/azimul-kabir/harmony/releases">
+              <span class="dot"></span> v3.1.0 is out · Read the release notes →
+            </a>
+            <h1>Your music.<br><span class="grad">Your way.</span></h1>
+            <p class="lede">
+              Harmony is a self-hosted music manager. It syncs your Spotify and YouTube Music
+              playlists, downloads <em>only the songs you're missing</em>, and keeps a clean,
+              tagged library ready for Navidrome.
+            </p>
+            <div class="cta">
+              <a class="btn btn-primary" href="#install">Install with Docker</a>
+              <a class="btn btn-ghost" href="#tour">Take the tour</a>
+            </div>
+            <ul class="facts" aria-label="At a glance">
+              <li>Free &amp; open source (MIT)</li>
+              <li>Runs on any Docker host or Synology NAS</li>
+              <li>No cloud account required</li>
+            </ul>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i><span>harmony.local/library</span></div>
+              <img src="assets/shots/desktop-albums.webp" alt="" width="1400" height="875" fetchpriority="high">
+            </div>
+            <img class="phone" src="assets/shots/mobile-dashboard.webp" alt="" width="560" height="1212">
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem / flow -->
+      <section class="section why">
+        <div class="wrap">
+          <div class="why-grid">
             <div>
-              <p class="eyebrow"><span class="live-dot"></span> SELF-HOSTED MUSIC MANAGEMENT</p>
-              <h1>Your music.<br><span>Your way.</span></h1>
+              <p class="eyebrow">Why Harmony exists</p>
+              <h2>Hundreds of playlists. Zero duplicate downloads.</h2>
+              <p>
+                The same song shows up in dozens of playlists, and most downloaders grab it every
+                single time. Harmony remembers what's already in your library, downloads only what's
+                missing, and refuses a remix or karaoke version when you asked for the original.
+              </p>
             </div>
-            <div class="hero-intro">
-              <p id="project-overview" aria-live="polite">Loading the current project overview…</p>
-              <div class="hero-actions">
-                <a class="button button-dark" href="get-started.html">Get started <span aria-hidden="true">↗</span></a>
-                <a class="text-link" href="https://github.com/azimul-kabir/harmony" target="_blank" rel="noreferrer">Explore the project <span aria-hidden="true">↗</span></a>
-              </div>
-            </div>
+            <ol class="flow" aria-label="How music flows through Harmony">
+              <li><span class="flow-tag">Source</span><strong>Spotify &amp; YouTube Music</strong><small>Playlists, albums, tracks</small></li>
+              <li class="flow-main"><span class="flow-tag">Harmony</span><strong>Match · Download · Organize</strong><small>Skips what you already own</small></li>
+              <li><span class="flow-tag">Library</span><strong>Tagged files + M3U playlists</strong><small>Artist / Album / Track</small></li>
+              <li><span class="flow-tag">Navidrome</span><strong>Stream everywhere</strong><small>Phone · desktop · web</small></li>
+            </ol>
           </div>
-          <figure class="hero-image">
-            <img id="project-hero" alt="Harmony project artwork loaded from its source repository" fetchpriority="high">
+        </div>
+      </section>
+
+      <!-- Features -->
+      <section class="section" id="features">
+        <div class="wrap">
+          <div class="head">
+            <p class="eyebrow">Features</p>
+            <h2>Everything between “I like this playlist” and “it's on my phone.”</h2>
+          </div>
+          <div class="features">
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg></div>
+              <h3>Exact-match downloads</h3>
+              <p>Every file is checked for artist, title, version and duration before import. Live, remix, sped-up and cover substitutes are rejected.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg></div>
+              <h3>Playlist auto-sync</h3>
+              <p>Follow Spotify and public YouTube Music playlists as Sources. Harmony checks them hourly to weekly and fetches only new songs.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></div>
+              <h3>Built for Navidrome</h3>
+              <p>Clean Artist/Album folders and order-preserving M3U playlists, with a Navidrome rescan after every change.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+              <h3>Instant library search</h3>
+              <p>Search titles, artists, albums, genres, ISRCs and MusicBrainz IDs. Sort and filter by bitrate, year, codec or missing artwork.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
+              <h3>Metadata &amp; artwork</h3>
+              <p>Fix tags by hand or pull them from MusicBrainz, with cover art from the Cover Art Archive. You review every change before it's saved.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3M12 3v12m0-12-4 4m4-4 4 4"/></svg></div>
+              <h3>Import your own music</h3>
+              <p>Upload MP3, FLAC, M4A, Ogg or Opus. Harmony groups them by album, flags gaps and conflicts, and never overwrites a file it already has.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+              <h3>Library health</h3>
+              <p>Spot missing files, artwork or tags at a glance. Find likely duplicates and resolve them with a preview first.</p>
+            </article>
+            <article class="card">
+              <div class="ico"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
+              <h3>Works on your phone</h3>
+              <p>One responsive app for desktop and mobile that installs as a PWA. Includes light and dark themes and live download progress.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tour -->
+      <section class="section tour" id="tour">
+        <div class="wrap">
+          <div class="head">
+            <p class="eyebrow">Tour</p>
+            <h2>See it in action.</h2>
+            <p class="sub">Real screenshots from Harmony v3, using a demo library of fictional artists.</p>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Screenshots">
+            <button role="tab" aria-selected="true" data-shot="dashboard">Dashboard</button>
+            <button role="tab" aria-selected="false" data-shot="library">Library</button>
+            <button role="tab" aria-selected="false" data-shot="albums">Albums</button>
+            <button role="tab" aria-selected="false" data-shot="downloads">Downloads</button>
+            <button role="tab" aria-selected="false" data-shot="sources">Sources</button>
+            <button role="tab" aria-selected="false" data-shot="playlists">Playlists</button>
+          </div>
+          <figure class="window tour-window" role="tabpanel">
+            <div class="window-bar"><i></i><i></i><i></i><span id="tour-url">harmony.local/dashboard</span></div>
+            <img id="tour-img" src="assets/shots/desktop-dashboard.webp" width="1400" height="875" loading="lazy"
+                 alt="Dashboard with library totals, attention items, live download workers, and queue health">
+            <figcaption id="tour-cap">Library totals, items needing attention, live download workers, and queue health.</figcaption>
           </figure>
-          <div class="hero-meta">
-            <span><span class="live-dot"></span> Open source · <a id="hero-license-link" href="https://github.com/azimul-kabir/harmony" target="_blank" rel="noreferrer">View license</a></span>
-            <span id="release-status">Checking the latest release…</span>
-          </div>
-          <p class="source-status" data-source-status>Fetching live project information…</p>
-        </div>
-      </section>
 
-      <section class="home-highlights section-pad">
-        <div class="container">
-          <div class="section-heading">
-            <div><p class="eyebrow">FROM THE LIVE PROJECT README</p><h2>Made for your library.</h2></div>
-          </div>
-          <div class="feature-topics live-content" id="home-highlights" aria-live="polite">
-            <p class="source-loading">Loading project highlights…</p>
-          </div>
-          <a class="text-link section-more-link" href="features.html">Explore the interface and features <span aria-hidden="true">↗</span></a>
-        </div>
-      </section>
-
-      <section class="library-showcase section-pad home-gallery">
-        <div class="container">
-          <div class="section-heading">
-            <div><p class="eyebrow">REAL PROJECT SCREENSHOTS</p><h2>See Harmony in action.</h2></div>
-          </div>
-          <div class="screenshot-grid live-content" id="live-gallery" aria-live="polite">
-            <p class="source-loading">Loading project screenshots…</p>
+          <div class="mobile-row">
+            <div class="mobile-copy">
+              <h3>The whole app fits in your pocket.</h3>
+              <p>Queue a download from the couch, check on a sync from the train. The mobile layout has bottom navigation and installs to your home screen.</p>
+            </div>
+            <div class="phones">
+              <img src="assets/shots/mobile-library.webp" width="560" height="1212" loading="lazy" alt="Mobile library with song cards">
+              <img src="assets/shots/mobile-downloads.webp" width="560" height="1212" loading="lazy" alt="Mobile downloads page">
+              <img src="assets/shots/mobile-playlists.webp" width="560" height="1212" loading="lazy" alt="Mobile playlist cards">
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="home-links section-pad">
-        <div class="container home-links-grid">
-          <a class="home-link-card" href="get-started.html"><span class="eyebrow">GET STARTED</span><strong>Set up Harmony ↗</strong></a>
-          <a class="home-link-card" href="faq.html"><span class="eyebrow">FAQ</span><strong>Find an answer ↗</strong></a>
-          <a class="home-link-card" href="developers.html"><span class="eyebrow">DEVELOPERS</span><strong>Explore the internals ↗</strong></a>
+      <!-- Install -->
+      <section class="section" id="install">
+        <div class="wrap">
+          <div class="head">
+            <p class="eyebrow">Install</p>
+            <h2>Up and running in three commands.</h2>
+            <p class="sub">All you need is Docker. Works on Linux, macOS and Windows (Docker Desktop), and Synology Container Manager.</p>
+          </div>
+          <ol class="steps">
+            <li>
+              <h3>Get the code</h3>
+              <div class="code"><pre><code>git clone https://github.com/azimul-kabir/harmony.git
+cd harmony</code></pre><button class="copy" type="button">Copy</button></div>
+            </li>
+            <li>
+              <h3>Set a password</h3>
+              <div class="code"><pre><code>cp .env.example .env
+# then set WEB_AUTH_PASSWORD in .env</code></pre><button class="copy" type="button">Copy</button></div>
+              <p class="note">Point <code>MUSIC_HOST_PATH</code> at your existing music folder if you have one.</p>
+            </li>
+            <li>
+              <h3>Start it</h3>
+              <div class="code"><pre><code>docker compose up -d --build</code></pre><button class="copy" type="button">Copy</button></div>
+              <p class="note">Open <code>http://localhost:8080</code> and sign in as <code>admin</code>.</p>
+            </li>
+          </ol>
+          <p class="alt">
+            Prefer a prebuilt image? <code>docker pull ghcr.io/azimul-kabir/harmony:v3.1.0</code> (linux/amd64).
+            For everything else, see the <a href="https://github.com/azimul-kabir/harmony/blob/main/docs/configuration.md">configuration guide</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="section" id="faq">
+        <div class="wrap faq-grid">
+          <div class="head">
+            <p class="eyebrow">FAQ</p>
+            <h2>Good questions.</h2>
+          </div>
+          <div class="faq">
+            <details>
+              <summary>Does Harmony play music?</summary>
+              <p>No. Harmony gets, organizes and maintains your files. Playback is left to Navidrome or any media server that reads folders and M3U playlists. Pair it with a Subsonic client like Symfonium (Android), Amperfy (iOS) or Feishin (desktop).</p>
+            </details>
+            <details>
+              <summary>Do I need Spotify API credentials?</summary>
+              <p>No. Spotify credentials are optional and only needed if you explicitly turn on the official metadata API.</p>
+            </details>
+            <details>
+              <summary>What happens if the exact song can't be found?</summary>
+              <p>It stays marked as unavailable. Harmony won't quietly fill the gap with a live version, remix or cover just to make a playlist look complete.</p>
+            </details>
+            <details>
+              <summary>I already have a music collection. Will Harmony mess it up?</summary>
+              <p>Harmony indexes what's there and uses it to skip downloads you don't need. It never replaces an existing file automatically, and every destructive action asks you to confirm a preview first.</p>
+            </details>
+            <details>
+              <summary>Does it run on ARM / Apple Silicon?</summary>
+              <p>The published image targets linux/amd64. On ARM hosts and Apple Silicon Macs, build locally with <code>docker compose up -d --build</code>.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- Under the hood -->
+      <section class="section stack" id="stack">
+        <div class="wrap stack-inner">
+          <div>
+            <p class="eyebrow">Under the hood</p>
+            <h2>Small, boring, dependable tech.</h2>
+            <p>A single container with a single SQLite file and no external services to run. The web UI streams live progress over Server-Sent Events.</p>
+            <a class="link" href="https://github.com/azimul-kabir/harmony/blob/main/docs/architecture.md">Read the architecture notes →</a>
+          </div>
+          <ul class="chips">
+            <li>Python 3.12</li><li>FastAPI</li><li>SQLAlchemy 2</li><li>Alembic</li>
+            <li>SQLite + FTS5</li><li>yt-dlp</li><li>SpotDL</li><li>Mutagen</li>
+            <li>Watchdog</li><li>Server-Sent Events</li><li>Vanilla JS</li><li>Docker</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section final">
+        <div class="wrap final-inner">
+          <img src="assets/icon.svg" alt="" width="64" height="64">
+          <h2>Take back your library.</h2>
+          <div class="cta">
+            <a class="btn btn-primary" href="#install">Get started</a>
+            <a class="btn btn-ghost" href="https://github.com/azimul-kabir/harmony">Star on GitHub</a>
+          </div>
         </div>
       </section>
     </main>
-    <div data-site-footer></div>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <span>Harmony is MIT-licensed. Built by <a href="https://github.com/azimul-kabir">Azimul Kabir</a>.</span>
+        <nav aria-label="Footer">
+          <a href="https://github.com/azimul-kabir/harmony/blob/main/CHANGELOG.md">Changelog</a>
+          <a href="https://github.com/azimul-kabir/harmony/blob/main/docs/roadmap.md">Roadmap</a>
+          <a href="https://github.com/azimul-kabir/harmony/blob/main/docs/api.md">API</a>
+          <a href="https://github.com/azimul-kabir/harmony/issues">Issues</a>
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>
