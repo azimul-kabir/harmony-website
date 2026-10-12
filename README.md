@@ -14,13 +14,10 @@ The site is plain HTML, CSS, and JavaScript with no build step or server-side se
 
 The FAQ is assembled from current guide and release-note sections. The installation walkthrough, feature summaries, technology stack, and developer-resource links likewise render current material from the source repository.
 
-## Deploy with Cloudflare Pages
+## Deploy with GitHub Pages
 
-GitHub remains the source of truth; Cloudflare Pages builds and hosts this private repository. No GitHub Pages workflow, package install, API token, or repository secret is needed. The site is plain static files and has no compilation step.
+GitHub is the source of truth and serves the static site with GitHub Pages Actions. There is no package installation or compilation step.
 
-1. In Cloudflare, open **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
-2. Authorize GitHub if prompted and select `azimul-kabir/harmony-website`.
-3. Set the production branch to `main`, framework preset to **None**, the build command to `exit 0`, and the build output directory to `.`. `exit 0` is a successful no-op; Cloudflare serves the existing `index.html` and other static files directly.
-4. After the first successful deployment, open the Pages project **Custom domains** settings and add `harmony.azimulkabir.com`. Cloudflare will guide you through the DNS record and certificate setup.
+The workflow in `.github/workflows/pages.yml` publishes the repository root whenever changes reach `main`. The repository must remain public for GitHub Pages on the current account plan.
 
-Cloudflare Pages supports private GitHub repositories and automatically deploys new commits to `main`; other branches can be used as previews. The site is static HTML, CSS, and JavaScript, so there is no separate build step. Do not point the hostname at `azimul-kabir.github.io`: this repository is private and the account plan does not include GitHub Pages hosting.
+To use `harmony.azimulkabir.com`, keep DNS hosted by Cloudflare and add a DNS-only CNAME record for `harmony` pointing to `azimul-kabir.github.io`. The `CNAME` file and GitHub Pages custom-domain setting use the same hostname. GitHub provisions HTTPS after DNS verification; allow time for DNS propagation and certificate issuance.
