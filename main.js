@@ -12,12 +12,17 @@ const img = document.getElementById("tour-img");
 const cap = document.getElementById("tour-cap");
 const url = document.getElementById("tour-url");
 
+// Screens with a light-theme capture follow the system theme.
+const lightShots = new Set(["dashboard", "library"]);
+const prefersLight = matchMedia("(prefers-color-scheme: light)");
+
 function show(tab) {
   const key = tab.dataset.shot;
   tabs.forEach((t) => t.setAttribute("aria-selected", t === tab));
   img.style.opacity = 0;
   const next = new Image();
-  next.src = `assets/shots/desktop-${key}.webp`;
+  const variant = prefersLight.matches && lightShots.has(key) ? "-light" : "";
+  next.src = `assets/shots/desktop-${key}${variant}.webp`;
   next.decode().catch(() => {}).finally(() => {
     img.src = next.src;
     img.alt = shots[key][0];
@@ -36,6 +41,10 @@ tabs.forEach((tab, i) => {
     show(next);
   });
 });
+
+const current = () => [...tabs].find((t) => t.getAttribute("aria-selected") === "true");
+if (prefersLight.matches) show(current());
+prefersLight.addEventListener("change", () => show(current()));
 
 // Copy buttons on install commands
 document.querySelectorAll(".copy").forEach((btn) => {
